@@ -1,12 +1,136 @@
 ﻿<Window x:Class="FitnesInventory.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:FitnesInventory"
-        mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="Фитнес Инвентарь - Учет" Height="600" Width="1000"
+        WindowStartupLocation="CenterScreen">
+    
     <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
 
+        <Menu Grid.Row="0" Background="LightGray">
+            <MenuItem Header="Файл">
+                <MenuItem Header="Выход" Click="Exit_Click"/>
+            </MenuItem>
+            <MenuItem Header="Добавить">
+                <MenuItem Header="Оборудование" Click="AddEquipment_Click"/>
+                <MenuItem Header="Категорию оборудования" Click="AddEquipmentCategory_Click"/>
+                <MenuItem Header="Местоположение" Click="AddLocation_Click"/>
+                <MenuItem Header="Поставщика" Click="AddSupplier_Click"/>
+                <MenuItem Header="Категорию инвентаря" Click="AddInventoryCategory_Click"/>
+                <MenuItem Header="Инвентарь" Click="AddInventoryItem_Click"/>
+                <MenuItem Header="Сотрудника" Click="AddEmployee_Click"/>
+                <MenuItem Header="Транзакцию" Click="AddTransaction_Click"/>
+            </MenuItem>
+            <MenuItem Header="Обновить" Click="Refresh_Click"/>
+        </Menu>
+
+        <TabControl Grid.Row="1" Margin="5" x:Name="MainTabControl">
+            <TabItem Header="Оборудование">
+                <DataGrid x:Name="EquipmentGrid" AutoGenerateColumns="False" IsReadOnly="True" 
+                          Margin="5" AlternatingRowBackground="LightBlue">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="ID" Binding="{Binding EquipmentId}" Width="50"/>
+                        <DataGridTextColumn Header="Серийный номер" Binding="{Binding SerialNumber}" Width="120"/>
+                        <DataGridTextColumn Header="Название" Binding="{Binding EquipmentName}" Width="200"/>
+                        <DataGridTextColumn Header="Категория" Binding="{Binding Category.CategoryName}" Width="120"/>
+                        <DataGridTextColumn Header="Местоположение" Binding="{Binding Location.LocationName}" Width="120"/>
+                        <DataGridTextColumn Header="Поставщик" Binding="{Binding Supplier.SupplierName}" Width="150"/>
+                        <DataGridTextColumn Header="Дата покупки" Binding="{Binding PurchaseDate, StringFormat={}{0:dd.MM.yyyy}}" Width="100"/>
+                        <DataGridTextColumn Header="Цена" Binding="{Binding PurchasePrice, StringFormat={}{0:N2} ₽}" Width="100"/>
+                        <DataGridTextColumn Header="Статус" Binding="{Binding Status}" Width="100"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </TabItem>
+            
+            <TabItem Header="Инвентарь">
+                <DataGrid x:Name="InventoryGrid" AutoGenerateColumns="False" IsReadOnly="True"
+                          Margin="5" AlternatingRowBackground="LightGreen">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="ID" Binding="{Binding ItemId}" Width="50"/>
+                        <DataGridTextColumn Header="Название" Binding="{Binding ItemName}" Width="200"/>
+                        <DataGridTextColumn Header="Категория" Binding="{Binding Category.CategoryName}" Width="120"/>
+                        <DataGridTextColumn Header="Ед. изм." Binding="{Binding Category.UnitOfMeasure}" Width="80"/>
+                        <DataGridTextColumn Header="Текущее кол-во" Binding="{Binding CurrentQuantity}" Width="100"/>
+                        <DataGridTextColumn Header="Мин. уровень" Binding="{Binding MinStockLevel}" Width="100"/>
+                        <DataGridTextColumn Header="Макс. уровень" Binding="{Binding MaxStockLevel}" Width="100"/>
+                        <DataGridTextColumn Header="Поставщик" Binding="{Binding Supplier.SupplierName}" Width="150"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </TabItem>
+            
+            <TabItem Header="Транзакции">
+                <DataGrid x:Name="TransactionsGrid" AutoGenerateColumns="False" IsReadOnly="True"
+                          Margin="5" AlternatingRowBackground="LightYellow">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="ID" Binding="{Binding TransactionId}" Width="50"/>
+                        <DataGridTextColumn Header="Товар" Binding="{Binding Item.ItemName}" Width="200"/>
+                        <DataGridTextColumn Header="Тип" Binding="{Binding TransactionType}" Width="80"/>
+                        <DataGridTextColumn Header="Дата" Binding="{Binding TransactionDate, StringFormat={}{0:dd.MM.yyyy HH:mm}}" Width="130"/>
+                        <DataGridTextColumn Header="Сотрудник" Binding="{Binding Employee.LastName}" Width="150"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </TabItem>
+
+            <TabItem Header="Справочники">
+                <TabControl>
+                    <TabItem Header="Категории оборудования">
+                        <DataGrid x:Name="EquipmentCategoriesGrid" AutoGenerateColumns="False" IsReadOnly="True">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="ID" Binding="{Binding CategoryId}" Width="50"/>
+                                <DataGridTextColumn Header="Название" Binding="{Binding CategoryName}" Width="200"/>
+                                <DataGridTextColumn Header="Описание" Binding="{Binding Description}" Width="300"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </TabItem>
+                    <TabItem Header="Местоположения">
+                        <DataGrid x:Name="LocationsGrid" AutoGenerateColumns="False" IsReadOnly="True">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="ID" Binding="{Binding LocationId}" Width="50"/>
+                                <DataGridTextColumn Header="Название" Binding="{Binding LocationName}" Width="200"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </TabItem>
+                    <TabItem Header="Поставщики">
+                        <DataGrid x:Name="SuppliersGrid" AutoGenerateColumns="False" IsReadOnly="True">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="ID" Binding="{Binding SupplierId}" Width="50"/>
+                                <DataGridTextColumn Header="Название" Binding="{Binding SupplierName}" Width="200"/>
+                                <DataGridTextColumn Header="Телефон" Binding="{Binding ContactPhone}" Width="120"/>
+                                <DataGridTextColumn Header="Email" Binding="{Binding ContactEmail}" Width="150"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </TabItem>
+                    <TabItem Header="Категории инвентаря">
+                        <DataGrid x:Name="InventoryCategoriesGrid" AutoGenerateColumns="False" IsReadOnly="True">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="ID" Binding="{Binding CategoryId}" Width="50"/>
+                                <DataGridTextColumn Header="Название" Binding="{Binding CategoryName}" Width="200"/>
+                                <DataGridTextColumn Header="Ед. изм." Binding="{Binding UnitOfMeasure}" Width="100"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </TabItem>
+                    <TabItem Header="Сотрудники">
+                        <DataGrid x:Name="EmployeesGrid" AutoGenerateColumns="False" IsReadOnly="True">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="ID" Binding="{Binding EmployeeId}" Width="50"/>
+                                <DataGridTextColumn Header="Имя" Binding="{Binding FirstName}" Width="120"/>
+                                <DataGridTextColumn Header="Фамилия" Binding="{Binding LastName}" Width="120"/>
+                                <DataGridTextColumn Header="Должность" Binding="{Binding Position}" Width="150"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </TabItem>
+                </TabControl>
+            </TabItem>
+        </TabControl>
+
+        <StatusBar Grid.Row="2" Background="LightGray">
+            <StatusBarItem>
+                <TextBlock x:Name="StatusText" Text="Готово"/>
+            </StatusBarItem>
+        </StatusBar>
     </Grid>
 </Window>
