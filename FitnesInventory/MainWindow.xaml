@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Фитнес Инвентарь - Учет" Height="600" Width="1000"
         WindowStartupLocation="CenterScreen">
-    
+
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -13,6 +13,11 @@
 
         <Menu Grid.Row="0" Background="LightGray">
             <MenuItem Header="Файл">
+                <MenuItem Header="Выгрузить сотрудников в Excel" Click="ExportEmployeesBtn_Click"/>
+                <MenuItem Header="Выгрузить поставщиков в Excel" Click="ExportSuppliersBtn_Click"/>
+                <Separator/>
+                <MenuItem Header="Выгрузить оба отчёта" Click="ExportBothBtn_Click"/>
+                <Separator/>
                 <MenuItem Header="Выход" Click="Exit_Click"/>
             </MenuItem>
             <MenuItem Header="Добавить">
@@ -45,7 +50,7 @@
                     </DataGrid.Columns>
                 </DataGrid>
             </TabItem>
-            
+
             <TabItem Header="Инвентарь">
                 <DataGrid x:Name="InventoryGrid" AutoGenerateColumns="False" IsReadOnly="True"
                           Margin="5" AlternatingRowBackground="LightGreen">
@@ -61,7 +66,7 @@
                     </DataGrid.Columns>
                 </DataGrid>
             </TabItem>
-            
+
             <TabItem Header="Транзакции">
                 <DataGrid x:Name="TransactionsGrid" AutoGenerateColumns="False" IsReadOnly="True"
                           Margin="5" AlternatingRowBackground="LightYellow">
