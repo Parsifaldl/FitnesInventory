@@ -1,6 +1,7 @@
 using FitnesInventory.Data;
 using FitnesInventory.Models;
 using System;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 
@@ -8,67 +9,67 @@ namespace FitnesInventory
 {
     public partial class AddEquipmentWindow : Window
     {
-        private DatabaseService _dbService;
-        private Equipment _equipment;
+        private FitnesInventoryDbContext _context;
 
-        public AddEquipmentWindow(DatabaseService dbService)
+        public AddEquipmentWindow(FitnesInventoryDbContext context)
         {
             InitializeComponent();
-            _dbService = dbService;
-            _equipment = new Equipment();
-
-            LoadComboBoxes();
+            _context = context;
+            LoadCategories();
+            LoadLocations();
+            LoadSuppliers();
         }
 
-        private void LoadComboBoxes()
+        private void LoadCategories()
         {
-            cmbCategory.ItemsSource = _dbService.GetEquipmentCategories();
-            cmbLocation.ItemsSource = _dbService.GetLocations();
-            cmbSupplier.ItemsSource = _dbService.GetSuppliers();
+            var categories = _context.Equipment_Category.ToList();
+            cmbCategory.ItemsSource = categories;
+            cmbCategory.DisplayMemberPath = "CategoryName";
+            cmbCategory.SelectedValuePath = "CategoryId";
+        }
+
+        private void LoadLocations()
+        {
+            var locations = _context.Location.ToList();
+            cmbLocation.ItemsSource = locations;
+            cmbLocation.DisplayMemberPath = "LocationName";
+            cmbLocation.SelectedValuePath = "LocationId";
+        }
+
+        private void LoadSuppliers()
+        {
+            var suppliers = _context.Supplier.ToList();
+            cmbSupplier.ItemsSource = suppliers;
+            cmbSupplier.DisplayMemberPath = "SupplierName";
+            cmbSupplier.SelectedValuePath = "SupplierId";
         }
 
         private void btnSave_Click(object sender, RoutedEventArgs e)
         {
             try
             {
-                if (string.IsNullOrWhiteSpace(txtName.Text))
+                var equipment = new Equipment
                 {
-                    MessageBox.Show("Введите название оборудования");
-                    return;
-                }
+                    EquipmentName = txtName.Text,
+                    SerialNumber = txtSerial.Text,
+                    CategoryId = (int)cmbCategory.SelectedValue,
+                    LocationId = (int)cmbLocation.SelectedValue,
+                    SupplierId = (int)cmbSupplier.SelectedValue,
+                    PurchaseDate = dpDate.SelectedDate,
+                    PurchasePrice = decimal.Parse(txtPrice.Text),
+                    Status = (cmbStatus.SelectedItem as ComboBoxItem)?.Content.ToString()
+                };
 
-                if (cmbCategory.SelectedItem == null)
-                {
-                    MessageBox.Show("Выберите категорию");
-                    return;
-                }
+                _context.Equipment.Add(equipment);
+                _context.SaveChanges();
 
-                _equipment.EquipmentName = txtName.Text;
-                _equipment.SerialNumber = txtSerial.Text;
-                _equipment.CategoryId = ((EquipmentCategory)cmbCategory.SelectedItem).CategoryId;
-
-                if (cmbLocation.SelectedItem != null)
-                    _equipment.LocationId = ((Location)cmbLocation.SelectedItem).LocationId;
-
-                if (cmbSupplier.SelectedItem != null)
-                    _equipment.SupplierId = ((Supplier)cmbSupplier.SelectedItem).SupplierId;
-
-                _equipment.PurchaseDate = dpDate.SelectedDate;
-
-                if (decimal.TryParse(txtPrice.Text, out decimal price))
-                    _equipment.PurchasePrice = price;
-
-                if (cmbStatus.SelectedItem is ComboBoxItem item)
-                    _equipment.Status = item.Content.ToString();
-
-                _dbService.AddEquipment(_equipment);
-
+                MessageBox.Show("Оборудование добавлено!", "Успех", MessageBoxButton.OK, MessageBoxImage.Information);
                 DialogResult = true;
                 Close();
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Ошибка: {ex.Message}");
+                MessageBox.Show($"Ошибка: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 

@@ -1,0 +1,53 @@
+﻿<Window x:Class="FitnesInventory.UserManagementWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Управление пользователями" Height="550" Width="900"
+        WindowStartupLocation="CenterOwner">
+
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+            <Button x:Name="AddUserBtn" Content="Добавить пользователя" 
+                    Width="180" Height="30" Margin="0,0,10,0"
+                    Background="LightGreen" Click="AddUserBtn_Click"/>
+            <Button x:Name="EditUserBtn" Content="Редактировать" 
+                    Width="120" Height="30" Margin="0,0,10,0"
+                    Click="EditUserBtn_Click"/>
+            <Button x:Name="DeleteUserBtn" Content="Удалить" 
+                    Width="100" Height="30" Background="LightCoral"
+                    Click="DeleteUserBtn_Click"/>
+        </StackPanel>
+
+        <DataGrid x:Name="UsersGrid" Grid.Row="1" AutoGenerateColumns="False" 
+                  IsReadOnly="True" AlternatingRowBackground="LightGray"
+                  SelectionMode="Single">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="ID" Binding="{Binding UserId}" Width="50"/>
+                <DataGridTextColumn Header="Логин" Binding="{Binding Username}" Width="100"/>
+                <DataGridTextColumn Header="ФИО" Binding="{Binding FullName}" Width="150"/>
+                <DataGridTextColumn Header="Роль" Binding="{Binding Role}" Width="80"/>
+                <DataGridTextColumn Header="Обор.(просмотр)" Binding="{Binding CanViewEquipment}" Width="50"/>
+                <DataGridTextColumn Header="Обор.(добавл)" Binding="{Binding CanAddEquipment}" Width="50"/>
+                <DataGridTextColumn Header="Инв.(просмотр)" Binding="{Binding CanViewInventory}" Width="50"/>
+                <DataGridTextColumn Header="Инв.(добавл)" Binding="{Binding CanAddInventory}" Width="50"/>
+                <DataGridTextColumn Header="Транз.(просмотр)" Binding="{Binding CanViewTransactions}" Width="50"/>
+                <DataGridTextColumn Header="Транз.(добавл)" Binding="{Binding CanAddTransactions}" Width="50"/>
+                <DataGridTextColumn Header="Сотр.(просмотр)" Binding="{Binding CanViewEmployees}" Width="50"/>
+                <DataGridTextColumn Header="Сотр.(добавл)" Binding="{Binding CanAddEmployees}" Width="50"/>
+                <DataGridTextColumn Header="Дата создания" Binding="{Binding CreatedAt, StringFormat={}{0:dd.MM.yyyy}}" Width="100"/>
+                <DataGridTextColumn Header="Последний вход" Binding="{Binding LastLogin, StringFormat={}{0:dd.MM.yyyy}}" Width="100"/>
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <StatusBar Grid.Row="2" Margin="-10,0">
+            <StatusBarItem>
+                <TextBlock x:Name="StatusText" Text="Готово"/>
+            </StatusBarItem>
+        </StatusBar>
+    </Grid>
+</Window>

@@ -1,14 +1,13 @@
-using FitnesInventory.Data;
-using FitnesInventory.Models;
-using Microsoft.EntityFrameworkCore;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using FitnesInventory.Models;
 
-namespace FitnesInventory
+namespace FitnesInventory.Data
 {
     public class DatabaseService
     {
-        private readonly FitnesInventoryDbContext _context;
+        private FitnesInventoryDbContext _context;
 
         public DatabaseService()
         {
@@ -17,11 +16,7 @@ namespace FitnesInventory
 
         public List<Equipment> GetAllEquipment()
         {
-            return _context.Equipment
-                .Include(e => e.Category)
-                .Include(e => e.Location)
-                .Include(e => e.Supplier)
-                .ToList();
+            return _context.Equipment.ToList();
         }
 
         public void AddEquipment(Equipment equipment)
@@ -30,87 +25,136 @@ namespace FitnesInventory
             _context.SaveChanges();
         }
 
-        public List<EquipmentCategory> GetEquipmentCategories()
-        {
-            return _context.EquipmentCategories.ToList();
-        }
-
-        public void AddEquipmentCategory(EquipmentCategory category)
-        {
-            _context.EquipmentCategories.Add(category);
-            _context.SaveChanges();
-        }
-
-        public List<Location> GetLocations()
-        {
-            return _context.Locations.ToList();
-        }
-
-        public void AddLocation(Location location)
-        {
-            _context.Locations.Add(location);
-            _context.SaveChanges();
-        }
-
-        public List<Supplier> GetSuppliers()
-        {
-            return _context.Suppliers.ToList();
-        }
-
-        public void AddSupplier(Supplier supplier)
-        {
-            _context.Suppliers.Add(supplier);
-            _context.SaveChanges();
-        }
-
         public List<InventoryItem> GetAllInventoryItems()
         {
-            return _context.InventoryItems
-                .Include(i => i.Category)
-                .Include(i => i.Supplier)
-                .ToList();
+            return _context.Inventory_Item.ToList();
         }
 
         public void AddInventoryItem(InventoryItem item)
         {
-            _context.InventoryItems.Add(item);
-            _context.SaveChanges();
-        }
-
-        public List<InventoryCategory> GetInventoryCategories()
-        {
-            return _context.InventoryCategories.ToList();
-        }
-
-        public void AddInventoryCategory(InventoryCategory category)
-        {
-            _context.InventoryCategories.Add(category);
-            _context.SaveChanges();
-        }
-
-        public List<Employee> GetEmployees()
-        {
-            return _context.Employees.ToList();
-        }
-
-        public void AddEmployee(Employee employee)
-        {
-            _context.Employees.Add(employee);
+            _context.Inventory_Item.Add(item);
             _context.SaveChanges();
         }
 
         public List<InventoryTransaction> GetAllTransactions()
         {
-            return _context.InventoryTransactions
-                .Include(t => t.Item)
-                .Include(t => t.Employee)
-                .ToList();
+            return _context.Inventory_Transaction.ToList();
         }
 
         public void AddTransaction(InventoryTransaction transaction)
         {
-            _context.InventoryTransactions.Add(transaction);
+            _context.Inventory_Transaction.Add(transaction);
             _context.SaveChanges();
+        }
+
+        public List<EquipmentCategory> GetEquipmentCategories()
+        {
+            return _context.Equipment_Category.ToList();
+        }
+
+        public void AddEquipmentCategory(EquipmentCategory category)
+        {
+            _context.Equipment_Category.Add(category);
+            _context.SaveChanges();
+        }
+
+        public List<Location> GetLocations()
+        {
+            return _context.Location.ToList();
+        }
+
+        public void AddLocation(Location location)
+        {
+            _context.Location.Add(location);
+            _context.SaveChanges();
+        }
+
+        public List<Supplier> GetSuppliers()
+        {
+            return _context.Supplier.ToList();
+        }
+
+        public void AddSupplier(Supplier supplier)
+        {
+            _context.Supplier.Add(supplier);
+            _context.SaveChanges();
+        }
+
+        public List<InventoryCategory> GetInventoryCategories()
+        {
+            return _context.Inventory_Category.ToList();
+        }
+
+        public void AddInventoryCategory(InventoryCategory category)
+        {
+            _context.Inventory_Category.Add(category);
+            _context.SaveChanges();
+        }
+
+        public List<Employee> GetEmployees()
+        {
+            return _context.Employee.ToList();
+        }
+
+        public void AddEmployee(Employee employee)
+        {
+            _context.Employee.Add(employee);
+            _context.SaveChanges();
+        }
+
+        public User GetUserByUsername(string username)
+        {
+            return _context.Users.FirstOrDefault(u => u.Username == username);
+        }
+
+        public void UpdateLastLogin(int userId)
+        {
+            var user = _context.Users.Find(userId);
+            if (user != null)
+            {
+                user.LastLogin = DateTime.Now;
+                _context.SaveChanges();
+            }
+        }
+
+        public List<User> GetAllUsers()
+        {
+            return _context.Users.ToList();
+        }
+
+        public void AddUser(User user)
+        {
+            user.CreatedAt = DateTime.Now;
+            _context.Users.Add(user);
+            _context.SaveChanges();
+        }
+
+        public void UpdateUser(User user)
+        {
+            _context.Users.Update(user);
+            _context.SaveChanges();
+        }
+
+        public void DeleteUser(int userId)
+        {
+            var user = _context.Users.Find(userId);
+            if (user != null && user.Role != "Admin")
+            {
+                _context.Users.Remove(user);
+                _context.SaveChanges();
+            }
+        }
+
+        public bool ChangePassword(int userId, string newPassword)
+        {
+            var user = _context.Users.Find(userId);
+            if (user != null)
+            {
+                user.PasswordHash = newPassword;
+                _context.SaveChanges();
+                return true;
+            }
+            return false;
         }
     }
 }

@@ -11,7 +11,7 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <Menu Grid.Row="0" Background="LightGray">
+        <Menu Grid.Row="0" Background="LightGray" x:Name="MainMenu">
             <MenuItem Header="Файл">
                 <MenuItem Header="Выгрузить сотрудников в Excel" Click="ExportEmployeesBtn_Click"/>
                 <MenuItem Header="Выгрузить поставщиков в Excel" Click="ExportSuppliersBtn_Click"/>
@@ -30,6 +30,7 @@
                 <MenuItem Header="Сотрудника" Click="AddEmployee_Click"/>
                 <MenuItem Header="Транзакцию" Click="AddTransaction_Click"/>
             </MenuItem>
+            <MenuItem Header="Пользователи" Click="ManageUsers_Click"/>
             <MenuItem Header="Обновить" Click="Refresh_Click"/>
         </Menu>
 

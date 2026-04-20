@@ -6,32 +6,106 @@ using System.Windows;
 using Microsoft.Win32;
 using System.Collections.Generic;
 using System.Linq;
+using System.Windows.Controls;
 
 namespace FitnesInventory
 {
     public partial class MainWindow : Window
     {
-        private DatabaseService _dbService;
+        private FitnesInventoryDbContext _context;
+        private User _currentUser;
 
-        public MainWindow()
+        public MainWindow(User currentUser)
         {
             InitializeComponent();
-            _dbService = new DatabaseService();
+            _context = new FitnesInventoryDbContext();
+            _currentUser = currentUser;
+            ApplyPermissions();
             LoadAllData();
+
+            this.Title = $"Фитнес Инвентарь - Учет (Пользователь: {_currentUser.FullName})";
+        }
+
+        private void ApplyPermissions()
+        {
+            if (_currentUser.Role == "Admin")
+            {
+                return;
+            }
+
+            if (!_currentUser.CanViewEquipment) EquipmentGrid.Visibility = Visibility.Collapsed;
+            if (!_currentUser.CanViewInventory) InventoryGrid.Visibility = Visibility.Collapsed;
+            if (!_currentUser.CanViewTransactions) TransactionsGrid.Visibility = Visibility.Collapsed;
+            if (!_currentUser.CanViewEmployees) EmployeesGrid.Visibility = Visibility.Collapsed;
+            if (!_currentUser.CanViewSuppliers) SuppliersGrid.Visibility = Visibility.Collapsed;
+            if (!_currentUser.CanViewLocations) LocationsGrid.Visibility = Visibility.Collapsed;
+            if (!_currentUser.CanViewCategories)
+            {
+                EquipmentCategoriesGrid.Visibility = Visibility.Collapsed;
+                InventoryCategoriesGrid.Visibility = Visibility.Collapsed;
+            }
+
+            foreach (var item in MainMenu.Items)
+            {
+                if (item is MenuItem menuItem && menuItem.Header.ToString() == "Добавить")
+                {
+                    if (!_currentUser.CanAddEquipment) RemoveMenuItem(menuItem, "Оборудование");
+                    if (!_currentUser.CanAddInventory) RemoveMenuItem(menuItem, "Инвентарь");
+                    if (!_currentUser.CanAddTransactions) RemoveMenuItem(menuItem, "Транзакцию");
+                    if (!_currentUser.CanAddEmployees) RemoveMenuItem(menuItem, "Сотрудника");
+                    if (!_currentUser.CanAddSuppliers) RemoveMenuItem(menuItem, "Поставщика");
+                    if (!_currentUser.CanAddLocations) RemoveMenuItem(menuItem, "Местоположение");
+                    if (!_currentUser.CanAddCategories)
+                    {
+                        RemoveMenuItem(menuItem, "Категорию оборудования");
+                        RemoveMenuItem(menuItem, "Категорию инвентаря");
+                    }
+                    break;
+                }
+            }
+        }
+
+        private MenuItem FindMenuItem(MenuItem parent, string header)
+        {
+            foreach (var item in parent.Items)
+            {
+                if (item is MenuItem mi)
+                {
+                    if (mi.Header.ToString() == header) return mi;
+                    var found = FindMenuItem(mi, header);
+                    if (found != null) return found;
+                }
+            }
+            return null;
+        }
+
+        private void RemoveMenuItem(MenuItem parent, string header)
+        {
+            var item = FindMenuItem(parent, header);
+            if (item != null) parent.Items.Remove(item);
         }
 
         private void LoadAllData()
         {
             try
             {
-                EquipmentGrid.ItemsSource = _dbService.GetAllEquipment();
-                InventoryGrid.ItemsSource = _dbService.GetAllInventoryItems();
-                TransactionsGrid.ItemsSource = _dbService.GetAllTransactions();
-                EquipmentCategoriesGrid.ItemsSource = _dbService.GetEquipmentCategories();
-                LocationsGrid.ItemsSource = _dbService.GetLocations();
-                SuppliersGrid.ItemsSource = _dbService.GetSuppliers();
-                InventoryCategoriesGrid.ItemsSource = _dbService.GetInventoryCategories();
-                EmployeesGrid.ItemsSource = _dbService.GetEmployees();
+                if (_currentUser.CanViewEquipment)
+                    EquipmentGrid.ItemsSource = _context.Equipment.ToList();
+                if (_currentUser.CanViewInventory)
+                    InventoryGrid.ItemsSource = _context.Inventory_Item.ToList();
+                if (_currentUser.CanViewTransactions)
+                    TransactionsGrid.ItemsSource = _context.Inventory_Transaction.ToList();
+                if (_currentUser.CanViewCategories)
+                {
+                    EquipmentCategoriesGrid.ItemsSource = _context.Equipment_Category.ToList();
+                    InventoryCategoriesGrid.ItemsSource = _context.Inventory_Category.ToList();
+                }
+                if (_currentUser.CanViewLocations)
+                    LocationsGrid.ItemsSource = _context.Location.ToList();
+                if (_currentUser.CanViewSuppliers)
+                    SuppliersGrid.ItemsSource = _context.Supplier.ToList();
+                if (_currentUser.CanViewEmployees)
+                    EmployeesGrid.ItemsSource = _context.Employee.ToList();
 
                 StatusText.Text = $"Данные загружены: {DateTime.Now:HH:mm:ss}";
             }
@@ -54,7 +128,12 @@ namespace FitnesInventory
 
         private void AddEquipment_Click(object sender, RoutedEventArgs e)
         {
-            var window = new AddEquipmentWindow(_dbService);
+            if (!_currentUser.CanAddEquipment && _currentUser.Role != "Admin")
+            {
+                MessageBox.Show("У вас нет прав на добавление оборудования", "Доступ запрещён");
+                return;
+            }
+            var window = new AddEquipmentWindow(_context);
             window.Owner = this;
             if (window.ShowDialog() == true)
             {
@@ -65,7 +144,12 @@ namespace FitnesInventory
 
         private void AddEquipmentCategory_Click(object sender, RoutedEventArgs e)
         {
-            var window = new AddSimpleWindow(_dbService, "EquipmentCategory");
+            if (!_currentUser.CanAddCategories && _currentUser.Role != "Admin")
+            {
+                MessageBox.Show("У вас нет прав на добавление категорий", "Доступ запрещён");
+                return;
+            }
+            var window = new AddSimpleWindow(_context, "EquipmentCategory");
             window.Owner = this;
             if (window.ShowDialog() == true)
             {
@@ -76,7 +160,12 @@ namespace FitnesInventory
 
         private void AddLocation_Click(object sender, RoutedEventArgs e)
         {
-            var window = new AddSimpleWindow(_dbService, "Location");
+            if (!_currentUser.CanAddLocations && _currentUser.Role != "Admin")
+            {
+                MessageBox.Show("У вас нет прав на добавление локаций", "Доступ запрещён");
+                return;
+            }
+            var window = new AddSimpleWindow(_context, "Location");
             window.Owner = this;
             if (window.ShowDialog() == true)
             {
@@ -87,7 +176,12 @@ namespace FitnesInventory
 
         private void AddSupplier_Click(object sender, RoutedEventArgs e)
         {
-            var window = new AddSupplierWindow(_dbService);
+            if (!_currentUser.CanAddSuppliers && _currentUser.Role != "Admin")
+            {
+                MessageBox.Show("У вас нет прав на добавление поставщиков", "Доступ запрещён");
+                return;
+            }
+            var window = new AddSupplierWindow(_context);
             window.Owner = this;
             if (window.ShowDialog() == true)
             {
@@ -98,7 +192,12 @@ namespace FitnesInventory
 
         private void AddInventoryCategory_Click(object sender, RoutedEventArgs e)
         {
-            var window = new AddSimpleWindow(_dbService, "InventoryCategory");
+            if (!_currentUser.CanAddCategories && _currentUser.Role != "Admin")
+            {
+                MessageBox.Show("У вас нет прав на добавление категорий", "Доступ запрещён");
+                return;
+            }
+            var window = new AddSimpleWindow(_context, "InventoryCategory");
             window.Owner = this;
             if (window.ShowDialog() == true)
             {
@@ -109,7 +208,12 @@ namespace FitnesInventory
 
         private void AddInventoryItem_Click(object sender, RoutedEventArgs e)
         {
-            var window = new AddInventoryItemWindow(_dbService);
+            if (!_currentUser.CanAddInventory && _currentUser.Role != "Admin")
+            {
+                MessageBox.Show("У вас нет прав на добавление инвентаря", "Доступ запрещён");
+                return;
+            }
+            var window = new AddInventoryItemWindow(_context);
             window.Owner = this;
             if (window.ShowDialog() == true)
             {
@@ -120,7 +224,12 @@ namespace FitnesInventory
 
         private void AddEmployee_Click(object sender, RoutedEventArgs e)
         {
-            var window = new AddEmployeeWindow(_dbService);
+            if (!_currentUser.CanAddEmployees && _currentUser.Role != "Admin")
+            {
+                MessageBox.Show("У вас нет прав на добавление сотрудников", "Доступ запрещён");
+                return;
+            }
+            var window = new AddEmployeeWindow(_context);
             window.Owner = this;
             if (window.ShowDialog() == true)
             {
@@ -131,7 +240,12 @@ namespace FitnesInventory
 
         private void AddTransaction_Click(object sender, RoutedEventArgs e)
         {
-            var window = new AddTransactionWindow(_dbService);
+            if (!_currentUser.CanAddTransactions && _currentUser.Role != "Admin")
+            {
+                MessageBox.Show("У вас нет прав на добавление транзакций", "Доступ запрещён");
+                return;
+            }
+            var window = new AddTransactionWindow(_context);
             window.Owner = this;
             if (window.ShowDialog() == true)
             {
@@ -142,7 +256,7 @@ namespace FitnesInventory
 
         private void ExportEmployeesToExcel()
         {
-            var employees = _dbService.GetEmployees().ToList();
+            var employees = _context.Employee.ToList();
 
             if (employees == null || employees.Count == 0)
             {
@@ -208,7 +322,7 @@ namespace FitnesInventory
 
         private void ExportSuppliersToExcel()
         {
-            var suppliers = _dbService.GetSuppliers().ToList();
+            var suppliers = _context.Supplier.ToList();
 
             if (suppliers == null || suppliers.Count == 0)
             {
@@ -283,8 +397,8 @@ namespace FitnesInventory
             if (saveDialog.ShowDialog() != true)
                 return;
 
-            var employees = _dbService.GetEmployees().ToList();
-            var suppliers = _dbService.GetSuppliers().ToList();
+            var employees = _context.Employee.ToList();
+            var suppliers = _context.Supplier.ToList();
 
             Excel.Application excelApp = new Excel.Application();
             excelApp.SheetsInNewWorkbook = 2;
@@ -373,6 +487,18 @@ namespace FitnesInventory
         public void ExportBothBtn_Click(object sender, RoutedEventArgs e)
         {
             ExportBothToExcel();
+        }
+
+        public void ManageUsers_Click(object sender, RoutedEventArgs e)
+        {
+            if (_currentUser.Role != "Admin")
+            {
+                MessageBox.Show("Только администратор может управлять пользователями", "Доступ запрещён");
+                return;
+            }
+            var window = new UserManagementWindow(_context, _currentUser);
+            window.Owner = this;
+            window.ShowDialog();
         }
     }
 }

@@ -1,41 +1,39 @@
+using FitnesInventory.Data;
+using FitnesInventory.Models;
 using System;
 using System.Windows;
-using FitnesInventory.Models;
 
 namespace FitnesInventory
 {
     public partial class AddSimpleWindow : Window
     {
-        private DatabaseService _dbService;
+        private FitnesInventoryDbContext _context;
         private string _type;
 
-        public AddSimpleWindow(DatabaseService dbService, string type)
+        public AddSimpleWindow(FitnesInventoryDbContext context, string type)
         {
             InitializeComponent();
-            _dbService = dbService;
+            _context = context;
             _type = type;
 
             switch (type)
             {
                 case "EquipmentCategory":
                     Title = "Добавление категории оборудования";
-                    lblField1.Content = "Название категории:";
                     lblField2.Visibility = Visibility.Visible;
                     txtField2.Visibility = Visibility.Visible;
                     lblField2.Content = "Описание:";
                     break;
-                case "InventoryCategory":
-                    Title = "Добавление категории инвентаря";
-                    lblField1.Content = "Название категории:";
-                    lblField2.Visibility = Visibility.Visible;
-                    txtField2.Visibility = Visibility.Visible;
-                    lblField2.Content = "Единица измерения:";
-                    break;
                 case "Location":
-                    Title = "Добавление местоположения";
-                    lblField1.Content = "Название местоположения:";
+                    Title = "Добавление локации";
                     lblField2.Visibility = Visibility.Collapsed;
                     txtField2.Visibility = Visibility.Collapsed;
+                    break;
+                case "InventoryCategory":
+                    Title = "Добавление категории инвентаря";
+                    lblField2.Visibility = Visibility.Visible;
+                    txtField2.Visibility = Visibility.Visible;
+                    lblField2.Content = "Ед. измерения:";
                     break;
             }
         }
@@ -44,45 +42,41 @@ namespace FitnesInventory
         {
             try
             {
-                if (string.IsNullOrWhiteSpace(txtField1.Text))
-                {
-                    MessageBox.Show("Заполните название");
-                    return;
-                }
-
                 switch (_type)
                 {
                     case "EquipmentCategory":
-                        var equipCat = new EquipmentCategory
+                        var equipCategory = new EquipmentCategory
                         {
                             CategoryName = txtField1.Text,
                             Description = txtField2.Text
                         };
-                        _dbService.AddEquipmentCategory(equipCat);
-                        break;
-                    case "InventoryCategory":
-                        var invCat = new InventoryCategory
-                        {
-                            CategoryName = txtField1.Text,
-                            UnitOfMeasure = txtField2.Text
-                        };
-                        _dbService.AddInventoryCategory(invCat);
+                        _context.Equipment_Category.Add(equipCategory);
                         break;
                     case "Location":
                         var location = new Location
                         {
                             LocationName = txtField1.Text
                         };
-                        _dbService.AddLocation(location);
+                        _context.Location.Add(location);
+                        break;
+                    case "InventoryCategory":
+                        var invCategory = new InventoryCategory
+                        {
+                            CategoryName = txtField1.Text,
+                            UnitOfMeasure = txtField2.Text
+                        };
+                        _context.Inventory_Category.Add(invCategory);
                         break;
                 }
 
+                _context.SaveChanges();
+                MessageBox.Show("Добавлено!", "Успех", MessageBoxButton.OK, MessageBoxImage.Information);
                 DialogResult = true;
                 Close();
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Ошибка: {ex.Message}");
+                MessageBox.Show($"Ошибка: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 

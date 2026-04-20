@@ -1,30 +1,24 @@
+using FitnesInventory.Data;
 using FitnesInventory.Models;
 using System;
 using System.Windows;
-using System.Xml.Linq;
 
 namespace FitnesInventory
 {
     public partial class AddSupplierWindow : Window
     {
-        private DatabaseService _dbService;
+        private FitnesInventoryDbContext _context;
 
-        public AddSupplierWindow(DatabaseService dbService)
+        public AddSupplierWindow(FitnesInventoryDbContext context)
         {
             InitializeComponent();
-            _dbService = dbService;
+            _context = context;
         }
 
         private void btnSave_Click(object sender, RoutedEventArgs e)
         {
             try
             {
-                if (string.IsNullOrWhiteSpace(txtName.Text))
-                {
-                    MessageBox.Show("Введите название поставщика");
-                    return;
-                }
-
                 var supplier = new Supplier
                 {
                     SupplierName = txtName.Text,
@@ -33,14 +27,16 @@ namespace FitnesInventory
                     Address = txtAddress.Text
                 };
 
-                _dbService.AddSupplier(supplier);
+                _context.Supplier.Add(supplier);
+                _context.SaveChanges();
 
+                MessageBox.Show("Поставщик добавлен!", "Успех", MessageBoxButton.OK, MessageBoxImage.Information);
                 DialogResult = true;
                 Close();
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Ошибка: {ex.Message}");
+                MessageBox.Show($"Ошибка: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 

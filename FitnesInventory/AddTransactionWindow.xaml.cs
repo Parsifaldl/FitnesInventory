@@ -1,56 +1,62 @@
+using FitnesInventory.Data;
+using FitnesInventory.Models;
 using System;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
-using FitnesInventory.Models;
 
 namespace FitnesInventory
 {
     public partial class AddTransactionWindow : Window
     {
-        private DatabaseService _dbService;
+        private FitnesInventoryDbContext _context;
 
-        public AddTransactionWindow(DatabaseService dbService)
+        public AddTransactionWindow(FitnesInventoryDbContext context)
         {
             InitializeComponent();
-            _dbService = dbService;
-
-            LoadComboBoxes();
+            _context = context;
+            LoadInventoryItems();
+            LoadEmployees();
         }
 
-        private void LoadComboBoxes()
+        private void LoadInventoryItems()
         {
-            cmbItem.ItemsSource = _dbService.GetAllInventoryItems();
-            cmbEmployee.ItemsSource = _dbService.GetEmployees();
+            var items = _context.Inventory_Item.ToList();
+            cmbItem.ItemsSource = items;
+            cmbItem.DisplayMemberPath = "ItemName";
+            cmbItem.SelectedValuePath = "ItemId";
+        }
+
+        private void LoadEmployees()
+        {
+            var employees = _context.Employee.ToList();
+            cmbEmployee.ItemsSource = employees;
+            cmbEmployee.DisplayMemberPath = "LastName";
+            cmbEmployee.SelectedValuePath = "EmployeeId";
         }
 
         private void btnSave_Click(object sender, RoutedEventArgs e)
         {
             try
             {
-                if (cmbItem.SelectedItem == null)
-                {
-                    MessageBox.Show("Выберите товар");
-                    return;
-                }
-
                 var transaction = new InventoryTransaction
                 {
-                    ItemId = ((InventoryItem)cmbItem.SelectedItem).ItemId,
-                    TransactionType = ((ComboBoxItem)cmbType.SelectedItem).Content.ToString(),
-                    TransactionDate = DateTime.Now
+                    ItemId = (int)cmbItem.SelectedValue,
+                    TransactionType = (cmbType.SelectedItem as ComboBoxItem)?.Content.ToString(),
+                    TransactionDate = DateTime.Now,
+                    EmployeeId = (int)cmbEmployee.SelectedValue
                 };
 
-                if (cmbEmployee.SelectedItem != null)
-                    transaction.EmployeeId = ((Employee)cmbEmployee.SelectedItem).EmployeeId;
+                _context.Inventory_Transaction.Add(transaction);
+                _context.SaveChanges();
 
-                _dbService.AddTransaction(transaction);
-
+                MessageBox.Show("Транзакция добавлена!", "Успех", MessageBoxButton.OK, MessageBoxImage.Information);
                 DialogResult = true;
                 Close();
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Ошибка: {ex.Message}");
+                MessageBox.Show($"Ошибка: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 

@@ -1,35 +1,24 @@
+using FitnesInventory.Data;
+using FitnesInventory.Models;
 using System;
 using System.Windows;
-using FitnesInventory.Models;
 
 namespace FitnesInventory
 {
     public partial class AddEmployeeWindow : Window
     {
-        private DatabaseService _dbService;
+        private FitnesInventoryDbContext _context;
 
-        public AddEmployeeWindow(DatabaseService dbService)
+        public AddEmployeeWindow(FitnesInventoryDbContext context)
         {
             InitializeComponent();
-            _dbService = dbService;
+            _context = context;
         }
 
         private void btnSave_Click(object sender, RoutedEventArgs e)
         {
             try
             {
-                if (string.IsNullOrWhiteSpace(txtFirstName.Text))
-                {
-                    MessageBox.Show("Введите имя");
-                    return;
-                }
-
-                if (string.IsNullOrWhiteSpace(txtLastName.Text))
-                {
-                    MessageBox.Show("Введите фамилию");
-                    return;
-                }
-
                 var employee = new Employee
                 {
                     FirstName = txtFirstName.Text,
@@ -37,14 +26,16 @@ namespace FitnesInventory
                     Position = txtPosition.Text
                 };
 
-                _dbService.AddEmployee(employee);
+                _context.Employee.Add(employee);
+                _context.SaveChanges();
 
+                MessageBox.Show("Сотрудник добавлен!", "Успех", MessageBoxButton.OK, MessageBoxImage.Information);
                 DialogResult = true;
                 Close();
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Ошибка: {ex.Message}");
+                MessageBox.Show($"Ошибка: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 

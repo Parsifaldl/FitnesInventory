@@ -1,69 +1,63 @@
-using System;
-using System.Windows;
+using FitnesInventory.Data;
 using FitnesInventory.Models;
+using System;
+using System.Linq;
+using System.Windows;
 
 namespace FitnesInventory
 {
     public partial class AddInventoryItemWindow : Window
     {
-        private DatabaseService _dbService;
+        private FitnesInventoryDbContext _context;
 
-        public AddInventoryItemWindow(DatabaseService dbService)
+        public AddInventoryItemWindow(FitnesInventoryDbContext context)
         {
             InitializeComponent();
-            _dbService = dbService;
-
-            LoadComboBoxes();
+            _context = context;
+            LoadCategories();
+            LoadSuppliers();
         }
 
-        private void LoadComboBoxes()
+        private void LoadCategories()
         {
-            cmbCategory.ItemsSource = _dbService.GetInventoryCategories();
-            cmbSupplier.ItemsSource = _dbService.GetSuppliers();
+            var categories = _context.Inventory_Category.ToList();
+            cmbCategory.ItemsSource = categories;
+            cmbCategory.DisplayMemberPath = "CategoryName";
+            cmbCategory.SelectedValuePath = "CategoryId";
+        }
+
+        private void LoadSuppliers()
+        {
+            var suppliers = _context.Supplier.ToList();
+            cmbSupplier.ItemsSource = suppliers;
+            cmbSupplier.DisplayMemberPath = "SupplierName";
+            cmbSupplier.SelectedValuePath = "SupplierId";
         }
 
         private void btnSave_Click(object sender, RoutedEventArgs e)
         {
             try
             {
-                if (string.IsNullOrWhiteSpace(txtName.Text))
-                {
-                    MessageBox.Show("Введите название");
-                    return;
-                }
-
-                if (cmbCategory.SelectedItem == null)
-                {
-                    MessageBox.Show("Выберите категорию");
-                    return;
-                }
-
                 var item = new InventoryItem
                 {
                     ItemName = txtName.Text,
-                    CategoryId = ((InventoryCategory)cmbCategory.SelectedItem).CategoryId
+                    CategoryId = (int)cmbCategory.SelectedValue,
+                    SupplierId = (int)cmbSupplier.SelectedValue,
+                    CurrentQuantity = int.Parse(txtQuantity.Text),
+                    MinStockLevel = int.Parse(txtMinStock.Text),
+                    MaxStockLevel = int.Parse(txtMaxStock.Text)
                 };
 
-                if (cmbSupplier.SelectedItem != null)
-                    item.SupplierId = ((Supplier)cmbSupplier.SelectedItem).SupplierId;
+                _context.Inventory_Item.Add(item);
+                _context.SaveChanges();
 
-                if (int.TryParse(txtQuantity.Text, out int quantity))
-                    item.CurrentQuantity = quantity;
-
-                if (int.TryParse(txtMinStock.Text, out int minStock))
-                    item.MinStockLevel = minStock;
-
-                if (int.TryParse(txtMaxStock.Text, out int maxStock))
-                    item.MaxStockLevel = maxStock;
-
-                _dbService.AddInventoryItem(item);
-
+                MessageBox.Show("Инвентарь добавлен!", "Успех", MessageBoxButton.OK, MessageBoxImage.Information);
                 DialogResult = true;
                 Close();
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Ошибка: {ex.Message}");
+                MessageBox.Show($"Ошибка: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
